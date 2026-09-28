@@ -17,7 +17,9 @@
             </a>
 
             <select class="ui dropdown" ref="submission_handling_operation">
-            <option value="download">Download selected submissions</option>
+            <option value="download_submissions">Download selected submissions</option>
+            <option value="download_prediction_results">Download prediction results of selected submissions</option>
+            <option value="download_scoring_results">Download scoring results of selected submissions</option>
             <option value="delete">Delete selected submissions</option>
             <option value="rerun">Rerun selected submissions</option>
             </select>
@@ -737,7 +739,15 @@
             CODALAB.events.trigger('submission_clicked')
         }
 
-        self.bulk_download = function () {
+        // file_type is one of "submissions", "predictions" or "results"
+        self.bulk_download = function (file_type) {
+            const download_options = {
+                submissions: {api: CODALAB.api.download_many_submissions, zip_name: "bulk_submissions.zip"},
+                prediction_results: {api: CODALAB.api.download_many_prediction_results, zip_name: "bulk_prediction_results.zip"},
+                scoring_results: {api: CODALAB.api.download_many_scoring_results, zip_name: "bulk_scoring_results.zip"},
+            }
+            const {api, zip_name} = download_options[file_type]
+
             const statusBox = document.getElementById('downloadStatus');
             const progressEl = document.getElementById('downloadProgress');
             const textEl = document.getElementById('progressText');
@@ -748,7 +758,7 @@
             textEl.textContent = "Preparing download...";
 
             // Kick the API request
-            const req = CODALAB.api.download_many_submissions(self.checked_submissions);
+            const req = api(self.checked_submissions);
 
             // Common error handler
             const handleError = (err) => {
@@ -858,7 +868,7 @@
                 const blob = await zip.generateAsync({ type: "blob" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = "bulk_submissions.zip";
+                link.download = zip_name;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -900,14 +910,14 @@
                     case "delete":
                         self.delete_selected_submissions()
                         break;
-                    case "download":
+                    case "download_submissions":
                         self.bulk_download("submissions")
                         break;
-                    case "download_results":
-                        self.bulk_download("results")
+                    case "download_scoring_results":
+                        self.bulk_download("scoring_results")
                         break;
-                    case "download_prediction":
-                        self.bulk_download("predictions")
+                    case "download_prediction_results":
+                        self.bulk_download("prediction_results")
                         break;
                     case "rerun":
                         self.rerun_selected_submissions()
