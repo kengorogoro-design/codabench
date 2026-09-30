@@ -132,6 +132,14 @@ class SubmissionViewSet(ModelViewSet):
                     Q(phase__competition__collaborators__in=[self.request.user.pk])
                 ).distinct()
 
+            # The participant-facing "My Submissions" table shares this endpoint
+            # with organizer views. Organizers are intentionally allowed to see
+            # all competition submissions, so the client must opt into a
+            # server-side owner filter before pagination/counting.
+            only_mine = self.request.query_params.get('only_mine', 'false').lower() == 'true'
+            if only_mine:
+                qs = qs.filter(owner=self.request.user)
+
             # By default, exclude soft-deleted submissions unless explicitly requested by an admin
             if not show_is_soft_deleted:
                 qs = qs.filter(is_soft_deleted=False)

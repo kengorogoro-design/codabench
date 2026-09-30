@@ -262,6 +262,34 @@ class SubmissionAPITests(APITestCase):
         resp = self.client.get(url)
         assert resp.status_code == 200
 
+    def test_only_mine_limits_organizer_list_and_pagination_count_to_self(self):
+        creator_submission = SubmissionFactory(
+            phase=self.phase,
+            owner=self.creator,
+            status=Submission.SUBMITTED,
+            leaderboard=None,
+        )
+
+        self.client.force_login(self.creator)
+
+        # Organizer-wide access remains available when only_mine is absent.
+        resp = self.client.get(
+            reverse('submission-list'),
+            {'phase': self.phase.pk},
+        )
+        assert resp.status_code == 200
+        assert resp.data['count'] == 3
+
+        # The participant-facing table opts into server-side owner filtering,
+        # so pagination metadata and rows use the same "mine" population.
+        resp = self.client.get(
+            reverse('submission-list'),
+            {'phase': self.phase.pk, 'only_mine': 'true'},
+        )
+        assert resp.status_code == 200
+        assert resp.data['count'] == 1
+        assert [item['id'] for item in resp.data['results']] == [creator_submission.pk]
+
     def test_anonymous_cannot_list_or_retrieve_submissions(self):
         """
         SubmissionViewSet's general list/retrieve endpoints must not leak submission

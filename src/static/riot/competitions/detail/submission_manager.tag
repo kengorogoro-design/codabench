@@ -329,6 +329,13 @@
                 }
             }
 
+            // The same endpoint also powers organizer-wide submission views.
+            // Keep participant-facing "My Submissions" server-filtered before
+            // pagination so count/page totals describe only the current user.
+            if (!opts.admin) {
+                filters.only_mine = true
+            }
+
             filters.page = self.page
             if (String(self.page_size).toLowerCase() === 'all') {
                 filters.page_size = 'all'
