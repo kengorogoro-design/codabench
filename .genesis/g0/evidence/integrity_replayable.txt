@@ -1,0 +1,6 @@
+{
+  "ok": true,
+  "files": 32,
+  "content_root": "372855f1d2be74b55ad1dc19a4eef5f2007c7082e62323782faba1adf29fa808",
+  "bad": []
+}

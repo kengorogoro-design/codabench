@@ -1,0 +1,17 @@
+{
+  "r_series_status": "FOSSIL_EVIDENCE_ONLY",
+  "reason": "R4-R7 imposed builder-selected cognitive ontologies and then progressively removed them. G0 does not continue that ladder.",
+  "g0_privileged_substrate_only": [
+    "opaque executable bundle custody",
+    "bounded process execution",
+    "external task freeze and evidence custody",
+    "tamper-evident ledger",
+    "candidate/successor identity",
+    "rollback/isolation",
+    "authority boundary",
+    "external-outcome-only strong promotion"
+  ],
+  "not_required": [
+    "parser","planner","agent loop","memory","world model","representation family","search algorithm","learning rule","neural network","symbolic reasoner","fixed mutation grammar"
+  ]
+}

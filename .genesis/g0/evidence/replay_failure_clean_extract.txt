@@ -1,0 +1,5 @@
+Clean-extract replay failure observed 2026-10-01:
+Command: pytest -q
+Result: collection error: ModuleNotFoundError: No module named 'g0'
+Integrity check still passed 25/25 before the test invocation.
+This demonstrates that the original artifact's 6/6 pytest claim depended on an ambient import path and was not self-contained.

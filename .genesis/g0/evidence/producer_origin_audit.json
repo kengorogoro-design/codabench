@@ -1,0 +1,41 @@
+{
+  "court_class": "REEXPOSED_ENGINEERING_COURT_NOT_FRESH",
+  "subject_sha": "7968bf488909a0353920456434626c343f84fe97",
+  "subject_files_digest": "73fb6ac8a0e59285ba00e7b7db9c9c4bf3583f6341b6be6fe402a0671feebad7",
+  "builder_feature_origin": "BUILDER_MODEL_MEDIATED",
+  "producers": [
+    {
+      "seed": "relational_seed",
+      "producer_id": "5c7b596a9049da6d83f0100eb3ccbd8cc45c4fbb55a24ae157a7e1e1da497b62",
+      "output": {
+        "action": "probe",
+        "focus": [
+          "codalab",
+          "codabench",
+          "the",
+          "submission",
+          "for"
+        ],
+        "strategy": "contrast repeated identities across contexts"
+      },
+      "delivery_digest": null,
+      "matches_builder_feature": false,
+      "migi_credit": 0
+    },
+    {
+      "seed": "intervention_seed",
+      "producer_id": "f593d7c27784beeac9ea36ec47c2c66d41da41f4816cff5c4eb517652b3cdcdc",
+      "output": {
+        "action": "probe",
+        "strategy": "construct smallest A/B intervention preserving all but one observed difference",
+        "evidence_length": 651
+      },
+      "delivery_digest": null,
+      "matches_builder_feature": false,
+      "migi_credit": 0
+    }
+  ],
+  "ledger_verified": true,
+  "autonomous_repair_credit": 0,
+  "ok": true
+}

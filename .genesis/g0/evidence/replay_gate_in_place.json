@@ -1,0 +1,34 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "cmd": [
+        "/opt/pyvenv/bin/python",
+        "check_integrity.py"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"files\": 32,\n  \"content_root\": \"372855f1d2be74b55ad1dc19a4eef5f2007c7082e62323782faba1adf29fa808\",\n  \"bad\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/opt/pyvenv/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "returncode": 0,
+      "stdout": ".......                                                                  [100%]\n7 passed in 4.07s\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/opt/pyvenv/bin/python",
+        "run_g0.py"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"species\": [\n    {\n      \"id\": \"5c7b596a9049da6d83f0100eb3ccbd8cc45c4fbb55a24ae157a7e1e1da497b62\",\n      \"name\": \"relational_seed\",\n      \"out\": {\n        \"action\": \"probe\",\n        \"focus\": [\n          \"context\"\n        ],\n        \"strategy\": \"contrast repeated identities across contexts\"\n      }\n    },\n    {\n      \"id\": \"f593d7c27784beeac9ea36ec47c2c66d41da41f4816cff5c4eb517652b3cdcdc\",\n      \"name\": \"intervention_seed\",\n      \"out\": {\n        \"action\": \"probe\",\n        \"strategy\": \"construct smallest A/B intervention preserving all but one observed difference\",\n        \"evidence_length\": 95\n      }\n    }\n  ],\n  \"generator\": \"a6e2f62ca413aba6b3d9ad7c7711bd0c4267ce92354cec87f314718c4756cc0c\",\n  \"replacement_generator\": \"3d6a20ab842d77e8f75a01601efce7780d8f4eeab5b0b0858fa83145cf4f2549\",\n  \"descendant_candidate\": \"13232c50bd15df7758df8b74f732ab3e7829cc9dccf65e06f6565cd3953c1362\",\n  \"ledger_ok\": true,\n  \"ledger_error\": null\n}\n",
+      "stderr": ""
+    }
+  ]
+}

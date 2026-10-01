@@ -1,0 +1,18 @@
+{
+  "status": "OPERATIONAL_SUBSTRATE_ONLY",
+  "MIGI_CREDIT": 0,
+  "ADMISSION": "DENY",
+  "capabilities": [
+    "opaque candidate can request runtime-registered effect by name and JSON args",
+    "external authority can deny effect without candidate bypass",
+    "request and result are content-hashed into tamper-evident ledger",
+    "receipt is returned to the same opaque candidate for continuation",
+    "effect count is hard-bounded"
+  ],
+  "not_claimed": [
+    "autonomous real-world repair",
+    "self-originated tool policy",
+    "maintainer acceptance",
+    "MIGI intelligence"
+  ]
+}

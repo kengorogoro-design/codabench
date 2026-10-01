@@ -1,0 +1,74 @@
+{
+  "slice": "G0_CUSTODY_SELECTION_CORRECTION",
+  "migi_credit": 0,
+  "admission": "DENY",
+  "cognitive_mechanism_progress": "NOT_ESTABLISHED",
+  "self_hosted_repair": "NOT_ESTABLISHED",
+  "bootstrap_class": "BUILDER_WRITTEN_PROBE_AND_TEMPLATE_DEMONSTRATORS",
+  "source_artifact": {
+    "drive_id": "1rSUMbj4sGJpnf1_oQE30dYXFTonVfqyU",
+    "zip_sha256": "3fbfe95ca080414d9220bcf312e055c07840609169e748a2417b22a4ed3eda25"
+  },
+  "findings": [
+    "lexicographic outcomes could compensate regression/cost",
+    "court intersection discarded missing tasks and duplicates",
+    "effect authority omitted meant allow",
+    "mutable source could run under stale identity",
+    "builder feature attribution was not enforced",
+    "ledger append and task freeze lacked atomic custody"
+  ],
+  "repaired": [
+    "mandatory winner gates on every matched task",
+    "full matched coverage with typed componentwise comparisons",
+    "deny omitted/nonboolean/unavailable effect authority",
+    "before/staged/after source identity checks and bounded copied execution",
+    "process-delivery digest bound to submitted files",
+    "atomic locked ledger commits and immutable hashed task freeze",
+    "content-addressed retryable successor generation preserves old checkpoints"
+  ],
+  "boundaries": [
+    "same-author local tests are not independent intelligence verification",
+    "external CI provides different-host execution only; tests and harness are builder authored",
+    "no hostile OS/network isolation or LOCAL_ONLY attestation",
+    "boolean evidence fields are trusted importer assertions, not authentication",
+    "no maintainer/merge/production outcome for these 3 engineering courts",
+    "#2554 freshness conflict remains ineligible for unknown-task intelligence credit"
+  ],
+  "external_engineering": [
+    {
+      "issue": 2512,
+      "feature_sha": "7968bf488909a0353920456434626c343f84fe97",
+      "validation_sha": "ead79a9c6a04caa0d7f2f7dfebdeb09d338ed5a8",
+      "run": 36823116492,
+      "focused": 2,
+      "full_passed": 310,
+      "skipped": 2,
+      "lint": "PASS",
+      "origin": "BUILDER_MODEL_MEDIATED"
+    },
+    {
+      "issue": 2554,
+      "feature_sha": "a908616421cd661a90e4d4c55ff7c57480e87f46",
+      "run": 36824860203,
+      "focused": 2,
+      "full_passed": 310,
+      "skipped": 2,
+      "lint": "PASS",
+      "fresh_task_credit": "DENIED_EXPOSURE_CONFLICT"
+    },
+    {
+      "issue": 2562,
+      "feature_sha": "8ec2da17c58fc55c053ef2b0695e8c69a4c5d873",
+      "run": 36825135646,
+      "focused": 2,
+      "full_passed": 310,
+      "skipped": 2,
+      "lint": "PASS",
+      "fresh_task_credit": "DENIED_CUSTODY_INSUFFICIENT"
+    }
+  ],
+  "next_frontier": "Executable organism/generator must deliver actual task artifacts under pre-frozen provenance; compare strong adaptive baselines and externally owned heterogeneous fresh courts; do not let builder repairs count as organism output.",
+  "official_stage": "3/42",
+  "champion": "UNKNOWN",
+  "profit": "NOT_PROVEN"
+}

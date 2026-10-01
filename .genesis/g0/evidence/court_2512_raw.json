@@ -1,0 +1,8 @@
+{
+  "task_id": "codalab/codabench#2512",
+  "raw": "The 1st-place submission shows N/A for Accuracy metrics on the main leaderboard, but its detailed metrics show an HOTA of around 60%.\nIf the leaderboard is ranked by HOTA, this submission should not be ranked 1st (or possibly even be in the top 20).\nCould you please check whether the leaderboard is using the correct metric/value for ranking?\nThanks!",
+  "source_ref": "https://github.com/codalab/codabench/issues/2512",
+  "upstream_ref": "49dcad1a1c5e2603fbcd706efc287bfa99fd4c7d",
+  "court_class": "REEXPOSED_ENGINEERING_COURT_NOT_FRESH",
+  "builder_feature_sha": "7968bf488909a0353920456434626c343f84fe97"
+}

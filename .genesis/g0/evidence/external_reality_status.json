@@ -1,0 +1,24 @@
+{
+  "status": "EVIDENCE_ONLY_NOT_G0_VICTORY",
+  "react_foundry_391": {
+    "upstream": "daniel-ac-martin/react-foundry",
+    "pr": 391,
+    "state": "open",
+    "mergeable": true,
+    "head": "5060a207a61c2a8573114b4f5af1d2539671f446",
+    "upstream_workflows": "action_required",
+    "maintainer_review": false,
+    "merged": false
+  },
+  "codabench_2588": {
+    "upstream": "codalab/codabench",
+    "pr": 2588,
+    "state": "open",
+    "mergeable": true,
+    "head": "55e6a642a1e32c5e3263950ffce15ce53fb4f4ab",
+    "maintainer_review": false,
+    "merged": false,
+    "independent_fork_validation": "green"
+  },
+  "claim_boundary": "These are external reality contacts inherited as evidence donors. Neither is an upstream accepted/merged/production victory."
+}

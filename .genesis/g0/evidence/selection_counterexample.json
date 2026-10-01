@@ -1,0 +1,12 @@
+{
+  "legacy": {
+    "returncode": 0,
+    "stdout": "True",
+    "stderr": ""
+  },
+  "repaired": {
+    "returncode": 0,
+    "stdout": "False",
+    "stderr": ""
+  }
+}

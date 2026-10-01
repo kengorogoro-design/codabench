@@ -1,0 +1,29 @@
+{
+  "species": [
+    {
+      "id": "5c7b596a9049da6d83f0100eb3ccbd8cc45c4fbb55a24ae157a7e1e1da497b62",
+      "name": "relational_seed",
+      "out": {
+        "action": "probe",
+        "focus": [
+          "context"
+        ],
+        "strategy": "contrast repeated identities across contexts"
+      }
+    },
+    {
+      "id": "f593d7c27784beeac9ea36ec47c2c66d41da41f4816cff5c4eb517652b3cdcdc",
+      "name": "intervention_seed",
+      "out": {
+        "action": "probe",
+        "strategy": "construct smallest A/B intervention preserving all but one observed difference",
+        "evidence_length": 95
+      }
+    }
+  ],
+  "generator": "a6e2f62ca413aba6b3d9ad7c7711bd0c4267ce92354cec87f314718c4756cc0c",
+  "replacement_generator": "3d6a20ab842d77e8f75a01601efce7780d8f4eeab5b0b0858fa83145cf4f2549",
+  "descendant_candidate": "13232c50bd15df7758df8b74f732ab3e7829cc9dccf65e06f6565cd3953c1362",
+  "ledger_ok": true,
+  "ledger_error": null
+}
