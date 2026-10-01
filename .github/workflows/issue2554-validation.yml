@@ -30,3 +30,5 @@ jobs:
       - name: Dump service logs on failure
         if: failure()
         run: docker compose logs --no-color --tail=1200 django db rabbit redis minio
+
+# trigger validation
