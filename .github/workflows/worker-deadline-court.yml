@@ -1,0 +1,51 @@
+name: Worker deadline and generated successor court
+on:
+  push:
+    branches:
+      - genesis/worker-deadline-court-2586
+permissions:
+  contents: read
+jobs:
+  worker-court:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install test and Docker client dependencies
+        run: python -m pip install pytest==9.0.2 docker==7.1.0
+      - name: Replay opaque generation and exact output bytes
+        run: python .genesis/worker-court/replay.py
+      - name: Reproduce upstream deadline and event-loop failures
+        env:
+          WORKER_SUBJECT: .genesis/worker-court/original.py
+        run: |
+          if timeout 45s python -m pytest -c /dev/null -p no:cacheprovider -vv .genesis/worker-court/tests.py::test_quiet_container_is_stopped_at_deadline .genesis/worker-court/tests.py::test_event_loop_progresses_during_blocking_log_stream --junitxml=worker-upstream-baseline.xml; then
+            echo "Upstream unexpectedly passed"
+            exit 1
+          fi
+          python .genesis/worker-court/verify_baseline.py
+      - name: Pull and identify real execution image
+        run: |
+          docker pull alpine:3.22
+          docker image inspect alpine:3.22 --format '{{.Id}} {{json .RepoDigests}}'
+      - name: Strong builder comparator on faults and real containers
+        env:
+          REAL_DOCKER: '1'
+          WORKER_TEST_IMAGE: alpine:3.22
+          WORKER_SUBJECT: .genesis/worker-court/builder_baseline.py
+        run: timeout 45s python -m pytest -c /dev/null -p no:cacheprovider -vv .genesis/worker-court/tests.py --junitxml=worker-builder.xml
+      - name: Generated successor on identical faults and real containers
+        env:
+          REAL_DOCKER: '1'
+          WORKER_TEST_IMAGE: alpine:3.22
+          WORKER_SUBJECT: compute_worker/compute_worker.py
+        run: timeout 45s python -m pytest -c /dev/null -p no:cacheprovider -vv .genesis/worker-court/tests.py --junitxml=worker-successor.xml
+      - name: Reject watchdog and event-loop semantic mutations
+        run: python .genesis/worker-court/mutation.py
+      - name: Compile complete delivered worker
+        run: python -m py_compile compute_worker/compute_worker.py

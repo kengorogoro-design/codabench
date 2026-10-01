@@ -1,0 +1,14 @@
+{
+  "producer_id": "64ebf8f650245c46c2b3089bacfc22c37073abb4604adf986f7c59cb152c9112",
+  "request_digest": "f365724db15646d723900117dfb1b021a163a7f97561a177856a74589322a422",
+  "output_digest": "9dbe220fcf3e02ba172aac7b9e0173c505dc8a51fb33dc59b135f16557e7abbe",
+  "delivery_digest": null,
+  "output": {
+    "source_induced_changes": [],
+    "scope": "BOUNDED_BOOTSTRAP_NOT_MIGI",
+    "input_sha256": "1abcc8acf22952a0c61c35044445e753ad0bcbdf8b5a75c7534fc0bc186d7ea6",
+    "failure": "NO_UNAMBIGUOUS_SOURCE_DERIVED_REPAIR"
+  },
+  "origin": "EXECUTED_OPAQUE_PRODUCER",
+  "migi_credit": 0
+}

@@ -1,0 +1,63 @@
+{
+  "task_id": "codalab/codabench#2586",
+  "issue": {
+    "url": "https://github.com/codalab/codabench/issues/2586",
+    "title": "Execution time limit not forced by compute worker",
+    "issue_number": 2586,
+    "body": "### Issue\n\nLong submissions (_e.g. from MUnit Quest challenge_) are not shut down by the compute worker after 20 minutes. The worker get stuck waiting for the scoring to actually finish, and send this log when trying to stop the container:\n\n```python\n2026-09-29 13:26:15.941 | ERROR    | compute_worker:_run_container_engine_cmd:1124 - There was an error while starting the container and getting the logs: \n```\n\n### Fix\n\n- **Enforce the limit:** a threading.Timer force-removes the containers when time runs out. That ends the attach stream and unblocks client.wait, and start() then reports \"Execution Time Limit exceeded\" from a flag.\n\n- **Stop blocking the loop:** run the blocking docker calls (log iteration and wait) through asyncio.to_thread or run_in_executor. The event loop and the websocket keepalive then stay responsive.",
+    "state": "open",
+    "user": {
+      "login": "Didayolo",
+      "name": "Didayolo",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/11784999?v=4",
+      "id": 11784999
+    },
+    "assignees": null,
+    "labels": [
+      {
+        "name": "P1",
+        "color": "b60205",
+        "description": "High priority"
+      },
+      {
+        "name": "Workers / Queues",
+        "color": "0052CC",
+        "description": ""
+      }
+    ],
+    "milestone": null,
+    "state_reason": null,
+    "comments": 0,
+    "created_at": "2026-09-29T13:55:38Z",
+    "updated_at": "2026-09-29T14:14:29Z",
+    "closed_at": null,
+    "display_url": "https://github.com/codalab/codabench/issues/2586",
+    "display_title": "Execution time limit not forced by compute worker"
+  },
+  "upstream_sha": "7bd6fa007ef4efe166fddd2d6a4e06ac317aa006",
+  "tree_sha": "301fd3972ecdd759c885c55cad195cf0d8c9fa2d",
+  "selection_reason": "Externally reported high-priority worker hang requiring deadline enforcement and event-loop responsiveness",
+  "frozen_before_implementation_reveal": true,
+  "external_suggested_algorithm_present": true,
+  "exposure_note": "Raw issue explicitly suggests threading.Timer and offloading blocking Docker calls; no solution-novelty claim",
+  "protocol": {
+    "candidate_ids": [
+      "64ebf8f650245c46c2b3089bacfc22c37073abb4604adf986f7c59cb152c9112",
+      "6905d5765d8858953f547cffeca0a89f5742df25bac90cd0a775218a7d0150dd"
+    ],
+    "primary_obligations": [
+      "Deadline terminates a container with no output",
+      "Deadline terminates continuous output",
+      "Event loop progresses while container blocks",
+      "No deadline callback after successful completion",
+      "No stale watchdog removes a subsequent container",
+      "Timeout status distinguished from crash"
+    ],
+    "real_container_judge": "GitHub-hosted Docker execution",
+    "independent_judge": "NOT_AVAILABLE_BUILDER_AUTHORED_TESTS",
+    "promotion": "DENY_MIGI",
+    "failure_action": "Reject ineffective generator lineage; retain raw failures",
+    "lower_order_strong_baseline": "Builder model repair executed after candidate outputs freeze; separate attribution"
+  }
+}

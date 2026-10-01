@@ -1,0 +1,17 @@
+{
+  "generator_id": "0d949c285aea6635f48d51a79cdb79631f26a318a2b635d94026454a0ada2098",
+  "producer_id": "36d4706d9e6cdfce5b0c1ae9b538c6df106173919b892bcd9a1aaf0df72ba596",
+  "delivery_digest": "6abdfd6a98553b80ff3955afc7ae0122471a9c190fd69e2df7523276dc9b75bb",
+  "output_digest": "4ce21082d509bf287350fe316bd480877973becde3e404b2a6576253fce17809",
+  "fresh_task_credit": 0,
+  "scope": "SOURCE_PAIR_REPLAY_ON_EXPOSED_TASK",
+  "builder_generator_corrections": true,
+  "builder_delivery_corrections": [
+    "completed_container_log_backlog",
+    "skip_exited_attach_iterator",
+    "interrupt_stream_at_deadline"
+  ],
+  "manual_edits_to_delivery": false,
+  "selfhost_retry_identity": true,
+  "prior_delivery_regression": true
+}
