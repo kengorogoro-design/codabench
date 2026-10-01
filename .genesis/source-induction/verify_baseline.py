@@ -17,7 +17,7 @@ for case in cases:
     assert failure is not None
     operator = '<' if case.attrib['name'].startswith('test_missing_') else '=='
     assert re.fullmatch(r'assert -?\d+ ' + re.escape(operator) + r' -?\d+',
-                        failure.attrib.get('message', ''))
+                        failure.attrib.get('message', '').splitlines()[0])
     marker = 'assert ids.index(' if operator == '<' else 'assert best.pk =='
     assert marker in (failure.text or '')
 print(json.dumps({'upstream_baseline': 'TWO_EXPECTED_ASSERTION_FAILURES',
