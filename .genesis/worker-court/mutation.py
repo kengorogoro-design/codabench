@@ -27,7 +27,7 @@ for label, old, new, test in mutations:
         file.write_text(mutated)
         env = dict(os.environ, WORKER_SUBJECT=str(file))
         env.pop('REAL_DOCKER', None)
-        result = subprocess.run([sys.executable, '-m', 'pytest', '-q',
+        result = subprocess.run([sys.executable, '-m', 'pytest', '-c', '/dev/null', '-q',
                                  '.genesis/worker-court/tests.py::' + test,
                                  '--junitxml=' + str(report)], env=env, text=True, capture_output=True, timeout=12)
         assert result.returncode == 1, result.stdout + result.stderr

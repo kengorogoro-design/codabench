@@ -24,7 +24,7 @@ jobs:
         env:
           WORKER_SUBJECT: .genesis/worker-court/original.py
         run: |
-          if python -m pytest -q .genesis/worker-court/tests.py::test_quiet_container_is_stopped_at_deadline .genesis/worker-court/tests.py::test_event_loop_progresses_during_blocking_log_stream --junitxml=worker-upstream-baseline.xml; then
+          if python -m pytest -c /dev/null -q .genesis/worker-court/tests.py::test_quiet_container_is_stopped_at_deadline .genesis/worker-court/tests.py::test_event_loop_progresses_during_blocking_log_stream --junitxml=worker-upstream-baseline.xml; then
             echo "Upstream unexpectedly passed"
             exit 1
           fi
@@ -38,13 +38,13 @@ jobs:
           REAL_DOCKER: '1'
           WORKER_TEST_IMAGE: alpine:3.22
           WORKER_SUBJECT: .genesis/worker-court/builder_baseline.py
-        run: python -m pytest -q .genesis/worker-court/tests.py --junitxml=worker-builder.xml
+        run: python -m pytest -c /dev/null -q .genesis/worker-court/tests.py --junitxml=worker-builder.xml
       - name: Generated successor on identical faults and real containers
         env:
           REAL_DOCKER: '1'
           WORKER_TEST_IMAGE: alpine:3.22
           WORKER_SUBJECT: compute_worker/compute_worker.py
-        run: python -m pytest -q .genesis/worker-court/tests.py --junitxml=worker-successor.xml
+        run: python -m pytest -c /dev/null -q .genesis/worker-court/tests.py --junitxml=worker-successor.xml
       - name: Reject watchdog and event-loop semantic mutations
         run: python .genesis/worker-court/mutation.py
       - name: Compile complete delivered worker
