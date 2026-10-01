@@ -1,5 +1,6 @@
 """Accept only the two expected ranking assertion failures, never setup errors."""
 import json
+import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -14,6 +15,10 @@ for case in cases:
     assert case.find('skipped') is None
     failure = case.find('failure')
     assert failure is not None
-    assert 'AssertionError' in failure.attrib.get('message', '') + (failure.text or '')
+    operator = '<' if case.attrib['name'].startswith('test_missing_') else '=='
+    assert re.fullmatch(r'assert -?\d+ ' + re.escape(operator) + r' -?\d+',
+                        failure.attrib.get('message', ''))
+    marker = 'assert ids.index(' if operator == '<' else 'assert best.pk =='
+    assert marker in (failure.text or '')
 print(json.dumps({'upstream_baseline': 'TWO_EXPECTED_ASSERTION_FAILURES',
                   'tests': sorted(expected), 'setup_errors': 0}))
