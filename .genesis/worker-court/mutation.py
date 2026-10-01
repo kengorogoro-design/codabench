@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 subject = Path('compute_worker/compute_worker.py').read_text()
 mutations = [
-    ('missing-watchdog', 'watchdog.start()', 'None',
+    ('ineffective-watchdog', 'watchdog.start()', 'watchdog.function = lambda: None; watchdog.start()',
      'test_quiet_container_is_stopped_at_deadline'),
     ('blocking-log-iteration', 'log = await asyncio.to_thread(next_log)', 'log = next_log()',
      'test_event_loop_progresses_during_blocking_log_stream'),
