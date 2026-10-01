@@ -731,7 +731,7 @@ class SubmissionSoftDeletionTest(APITestCase):
         self.client.login(username="participant", password="participant")
         resp = self.client.delete(reverse("submission-soft-delete", args=[parent.pk]))
 
-        assert resp.status_code == 200
+        assert resp.status_code == 200, resp.data
         assert not Data.objects.filter(pk=shared_data.pk).exists()
 
         parent.refresh_from_db()
