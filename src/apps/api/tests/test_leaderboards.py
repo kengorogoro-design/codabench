@@ -130,7 +130,6 @@ class HiddenLeaderboardTests(APITestCase):
         assert resp.status_code == 200
 
 
-
 class LeaderboardNullScoreOrderingTests(APITestCase):
     def setUp(self):
         self.owner = factories.UserFactory(username='rank_owner', password='test')
