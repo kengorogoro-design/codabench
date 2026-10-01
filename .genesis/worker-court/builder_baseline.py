@@ -1063,6 +1063,11 @@ class Run:
                 pass
             except Exception as error:
                 logger.error(f'Deadline cleanup for {container_id} failed: {error}')
+            if stream is not None:
+                try:
+                    stream.close()
+                except Exception as error:
+                    logger.debug(f'Cannot interrupt expired log stream for {container_id}: {error}')
 
         watchdog = threading.Timer(max(0, deadline - time.monotonic()), expire_container)
         watchdog.daemon = True
@@ -1084,8 +1089,10 @@ class Run:
                 raise ExecutionTimeLimitExceeded()
             await asyncio.to_thread(client.start, container=container_id)
             stream = await asyncio.to_thread(client.attach, container_id, demux=True, stream=True, logs=True)
-            # Drain an exited container too: its buffered final logs remain useful.
-            while True:
+            # Attaching to an already exited process can leave Docker's upgraded
+            # socket open indefinitely. Fetch its backlog after wait instead.
+            state = await asyncio.to_thread(client.inspect_container, container_id)
+            while state['State']['Status'].lower() == 'running':
                 log = await asyncio.to_thread(next_log)
                 if log is exhausted:
                     break

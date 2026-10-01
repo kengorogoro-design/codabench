@@ -1036,6 +1036,11 @@ class Run:
                 pass
             except Exception as error:
                 logger.error(f'Deadline cleanup for {container_id} failed: {error}')
+            if stream is not None:
+                try:
+                    stream.close()
+                except Exception as error:
+                    logger.debug(f'Cannot interrupt expired log stream for {container_id}: {error}')
         watchdog = threading.Timer(max(0, deadline - time.monotonic()), expire_container)
         watchdog.daemon = True
         watchdog.start()
@@ -1054,7 +1059,8 @@ class Run:
                 raise ExecutionTimeLimitExceeded()
             await asyncio.to_thread(client.start, container=container_id)
             stream = await asyncio.to_thread(client.attach, container_id, demux=True, stream=True, logs=True)
-            while True:
+            state = await asyncio.to_thread(client.inspect_container, container_id)
+            while state['State']['Status'].lower() == 'running':
                 log = await asyncio.to_thread(next_log)
                 if log is exhausted:
                     break

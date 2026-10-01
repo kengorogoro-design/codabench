@@ -186,6 +186,29 @@ def test_cancelled_task_cleans_container_and_watchdog():
     assert not run._execution_time_limit_exceeded.is_set()
 
 
+def test_already_exited_container_uses_backlog_without_consuming_attach():
+    class ExitedClient(FaultClient):
+        def inspect_container(self, container):
+            return {'State': {'Status': 'exited'}}
+
+        def attach(self, container, **kwargs):
+            raise AssertionError('Exited attach stream must not be consumed')
+            yield None
+
+        def logs(self, container, stdout, stderr):
+            return b'completed-out\n' if stdout else b'completed-err\n'
+
+    client = ExitedClient(lifetime=0)
+    ns = load_subject(client)
+    run = make_run(ns, 0.1)
+    kind = ns['ProgramKind'].SCORING_PROGRAM
+    asyncio.run(run._run_container_engine_cmd({'Id': 'exited-id'}, kind))
+    assert run.logs[kind]['returncode'] == 0
+    assert run.logs[kind]['stdout']['data'] == b'completed-out\n'
+    assert run.logs[kind]['stderr']['data'] == b'completed-err\n'
+    assert not run._execution_time_limit_exceeded.is_set()
+
+
 def test_start_reports_timeout_instead_of_generic_failure():
     client = FaultClient()
     ns = load_subject(client)
@@ -239,12 +262,13 @@ def test_real_docker_deadline_and_event_loop(command):
 
 
 @pytest.mark.skipif(not os.getenv('REAL_DOCKER'), reason='Real Docker court runs on GitHub')
-def test_real_docker_success_and_name_reuse_survive_old_watchdog():
+@pytest.mark.parametrize('trial', range(3))
+def test_real_docker_success_and_name_reuse_survive_old_watchdog(trial):
     import docker
     client = docker.APIClient(base_url='unix:///var/run/docker.sock', timeout=8)
     ns = load_subject(client)
     run = make_run(ns, 0.8)
-    name = 'genesis-worker-court-name-reuse'
+    name = f'genesis-worker-court-name-reuse-{trial}'
     first = client.create_container(os.environ['WORKER_TEST_IMAGE'],
                                     command=['sh', '-c', 'echo final-out; echo final-err >&2'],
                                     name=name, network_disabled=True)
