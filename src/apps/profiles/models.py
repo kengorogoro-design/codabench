@@ -247,6 +247,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Save the changes
         self.save()
 
+        # Competition participant rows are retained when a user is soft-deleted.
+        # Refresh the cached counts after the user's visibility changed.
+        for participant in self.competitions_im_in.select_related('competition').all():
+            participant.competition.refresh_participants_count()
+
         # Send a confirmation email notice to the removed user
         send_user_deletion_confirmed(user_email)
 
@@ -255,6 +260,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.is_deleted = False
         self.deleted_at = None
         self.save()
+        for participant in self.competitions_im_in.select_related('competition').all():
+            participant.competition.refresh_participants_count()
 
 
 class GithubUserInfo(models.Model):

@@ -1,4 +1,5 @@
 from django.test import TestCase
+from unittest import mock
 from competitions.models import Submission, CompetitionParticipant
 from factories import UserFactory, CompetitionFactory, PhaseFactory, CompetitionParticipantFactory, SubmissionFactory
 
@@ -53,3 +54,47 @@ class CompetitionSubmissionsParticipantsCountsTests(TestCase):
 
         # Assert that the count increased by 1
         self.assertEqual(self.competition.participants_count, initial_count + 1)
+
+    def test_soft_deleted_user_is_excluded_and_restore_readds_them(self):
+        participant_user = UserFactory(username='deleted_participant', password='test')
+        CompetitionParticipantFactory(
+            user=participant_user,
+            competition=self.competition,
+            status=CompetitionParticipant.APPROVED,
+        )
+        self.competition.refresh_from_db()
+        active_count = self.competition.participants_count
+
+        with mock.patch('profiles.views.send_user_deletion_notice_to_admin'), \
+                mock.patch('profiles.views.send_user_deletion_confirmed'):
+            participant_user.delete()
+
+        self.competition.refresh_from_db()
+        self.assertEqual(self.competition.participants_count, active_count - 1)
+
+        participant_user.restore()
+        self.competition.refresh_from_db()
+        self.assertEqual(self.competition.participants_count, active_count)
+
+    def test_recount_excludes_soft_deleted_users(self):
+        from competitions.submission_participant_counts import compute_submissions_participants_counts
+
+        participant_user = UserFactory(username='deleted_for_recount', password='test')
+        CompetitionParticipantFactory(
+            user=participant_user,
+            competition=self.competition,
+            status=CompetitionParticipant.APPROVED,
+        )
+        participant_user.is_deleted = True
+        participant_user.save(update_fields=['is_deleted'])
+
+        self.competition.participants_count = 999
+        self.competition.save(update_fields=['participants_count'])
+        compute_submissions_participants_counts()
+
+        self.competition.refresh_from_db()
+        expected = CompetitionParticipant.objects.filter(
+            competition=self.competition,
+            user__is_deleted=False,
+        ).count()
+        self.assertEqual(self.competition.participants_count, expected)

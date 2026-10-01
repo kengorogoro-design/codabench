@@ -29,7 +29,10 @@ def compute_submissions_participants_counts():
 
     for competition in competitions:
         # Count participants for the competition
-        participants_count = CompetitionParticipant.objects.filter(competition=competition).count()
+        participants_count = CompetitionParticipant.objects.filter(
+            competition=competition,
+            user__is_deleted=False,
+        ).count()
 
         # Get all phases related to the competition
         phases = Phase.objects.filter(competition=competition)

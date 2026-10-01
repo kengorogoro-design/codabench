@@ -105,6 +105,13 @@ class Competition(models.Model):
     def all_organizers(self):
         return [self.created_by] + list(self.collaborators.all())
 
+    def refresh_participants_count(self):
+        """Synchronize the cached count with visible, non-deleted participants."""
+        participants_count = self.participants.filter(user__is_deleted=False).count()
+        type(self).objects.filter(pk=self.pk).update(participants_count=participants_count)
+        self.participants_count = participants_count
+        return participants_count
+
     @property
     def first_phase_start(self):
         first_phase = self.phases.filter(index=0).first()
@@ -255,6 +262,7 @@ class Competition(models.Model):
             new_participants.append(CompetitionParticipant(user=user, competition=self, status='approved'))
         if new_participants:
             CompetitionParticipant.objects.bulk_create(new_participants)
+            self.refresh_participants_count()
 
 
 class CompetitionCreationTaskStatus(models.Model):
@@ -761,16 +769,12 @@ class CompetitionParticipant(models.Model):
         super().save(*args, **kwargs)
 
         if is_new:
-            # Increment the participants_count for the competition
-            self.competition.participants_count += 1
-            self.competition.save()
+            self.competition.refresh_participants_count()
 
     def delete(self, *args, **kwargs):
-        # Decrement the participants_count for the competition
         competition = self.competition
         super().delete(*args, **kwargs)
-        competition.participants_count -= 1
-        competition.save()
+        competition.refresh_participants_count()
 
 
 class Page(models.Model):
