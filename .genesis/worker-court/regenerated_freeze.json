@@ -1,11 +1,14 @@
 {
   "generator_id": "0d949c285aea6635f48d51a79cdb79631f26a318a2b635d94026454a0ada2098",
-  "producer_id": "8dda27c8d27e5417d54bb4c7d4a92a662f33f6aa16aa270aafd6d6bce14702d8",
-  "delivery_digest": "dc2bad473f52e7cc75df7a1aac279ee1957a5e4f2b0dcb486d1a336c50a3be15",
-  "output_digest": "5cdec753d77c13656406c6e539f3744824352dce7abdf85353db5032a57fedba",
+  "producer_id": "ecebc5938a622f630fe22bc1d0b5abd48516c06f160416b267921a42a64730a4",
+  "delivery_digest": "ff675c578983ef7768a85f9a7f3eb10a0fa52bc6b79fc013c781451d9bfba34f",
+  "output_digest": "95301f236c4e3199968040cd1efd12197d5eb141c3495e279971f0d3218e467e",
   "fresh_task_credit": 0,
   "scope": "SOURCE_PAIR_REPLAY_ON_EXPOSED_TASK",
   "builder_generator_corrections": true,
+  "builder_delivery_corrections": [
+    "completed_container_log_backlog"
+  ],
   "manual_edits_to_delivery": false,
   "selfhost_retry_identity": true,
   "prior_delivery_regression": true

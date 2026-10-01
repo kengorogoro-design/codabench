@@ -1073,6 +1073,13 @@ class Run:
                         except Exception as error:
                             logger.error(error)
             return_code = await asyncio.to_thread(client.wait, container_id)
+            try:
+                final_stdout = await asyncio.to_thread(client.logs, container_id, stdout=True, stderr=False)
+                final_stderr = await asyncio.to_thread(client.logs, container_id, stdout=False, stderr=True)
+                stdout_chunks[:] = [final_stdout]
+                stderr_chunks[:] = [final_stderr]
+            except Exception as error:
+                logger.debug(f'Cannot read final log backlog for {container_id}: {error}')
         except ExecutionTimeLimitExceeded:
             timeout_flag.set()
         except (docker.errors.APIError, Exception) as error:
