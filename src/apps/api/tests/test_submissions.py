@@ -684,6 +684,50 @@ class SubmissionSoftDeletionTest(APITestCase):
         self.submission.refresh_from_db()
         assert self.submission.is_soft_deleted is True
 
+    def test_soft_delete_multitask_parent_cleans_children_and_shared_data(self):
+        """Deleting a visible parent must clean hidden child submissions too."""
+        shared_data = DataFactory(
+            created_by=self.participant,
+            type=Data.SUBMISSION,
+            competition=self.comp,
+            file_size=100,
+        )
+        parent = SubmissionFactory(
+            phase=self.phase,
+            owner=self.participant,
+            status=Submission.FINISHED,
+            is_soft_deleted=False,
+            leaderboard=None,
+            has_children=True,
+            data=shared_data,
+        )
+        child = SubmissionFactory(
+            phase=self.phase,
+            owner=self.participant,
+            status=Submission.FINISHED,
+            is_soft_deleted=False,
+            leaderboard=None,
+            parent=parent,
+            data=shared_data,
+        )
+
+        assert self.participant.get_used_storage_space() >= 100
+
+        self.client.login(username="participant", password="participant")
+        url = reverse("submission-soft-delete", args=[parent.pk])
+        resp = self.client.delete(url)
+
+        assert resp.status_code == 200
+
+        parent.refresh_from_db()
+        child.refresh_from_db()
+        assert parent.is_soft_deleted is True
+        assert child.is_soft_deleted is True
+        assert parent.data is None
+        assert child.data is None
+        assert Data.objects.filter(pk=shared_data.pk).exists() is False
+        assert self.participant.get_used_storage_space() == 0
+
     def test_organization_is_removed_from_soft_deleted_submission(self):
         """Ensure a organization reference is removed from soft-deleted submission"""
         self.client.login(username="participant", password="participant")

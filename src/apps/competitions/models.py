@@ -525,6 +525,12 @@ class Submission(models.Model):
         Also removes organization reference from the submission
         """
 
+        # Multi-task children are internal parts of the parent submission. The
+        # participant UI only exposes the parent, so deleting the parent must
+        # release every child-owned result/detail reference as well.
+        for child in self.children.filter(is_soft_deleted=False):
+            child.soft_delete()
+
         # Remove related files from storage
         # 'save=False' prevents a database save, which is handled later after marking the submission as soft-deleted.
         self.prediction_result.delete(save=False)
