@@ -136,6 +136,15 @@ class SubmissionViewSet(ModelViewSet):
             if not show_is_soft_deleted:
                 qs = qs.filter(is_soft_deleted=False)
 
+            # The submission manager renders multi-task children inside their
+            # parent row. Let callers exclude those internal rows before
+            # pagination so the reported count matches the visible table.
+            show_child_submissions = self.request.query_params.get(
+                'show_child_submissions', 'true'
+            ).lower() == 'true'
+            if not show_child_submissions:
+                qs = qs.filter(parent__isnull=True)
+
             qs = qs.select_related(
                 'phase',
                 'phase__competition',

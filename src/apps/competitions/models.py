@@ -525,6 +525,13 @@ class Submission(models.Model):
         Also removes organization reference from the submission
         """
 
+        # Multi-task child submissions are internal rows that share the parent's
+        # uploaded Data object. Clean them first so they cannot keep storage
+        # referenced after the user deletes the visible parent submission.
+        if self.has_children:
+            for child in self.children.all():
+                child.soft_delete()
+
         # Remove related files from storage
         # 'save=False' prevents a database save, which is handled later after marking the submission as soft-deleted.
         self.prediction_result.delete(save=False)

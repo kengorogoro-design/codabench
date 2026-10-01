@@ -698,6 +698,92 @@ class SubmissionSoftDeletionTest(APITestCase):
         assert self.organization_submission.is_soft_deleted is True
         assert self.organization_submission.organization is None
 
+    def test_soft_delete_multitask_parent_cleans_children_and_shared_data(self):
+        """Deleting a visible multi-task parent must release its shared upload."""
+        shared_data = DataFactory(
+            created_by=self.participant,
+            type=Data.SUBMISSION,
+            competition=self.comp,
+            file_size=2048,
+        )
+        parent = SubmissionFactory(
+            phase=self.phase,
+            owner=self.participant,
+            status=Submission.FINISHED,
+            is_soft_deleted=False,
+            leaderboard=None,
+            data=shared_data,
+            has_children=True,
+        )
+        children = [
+            SubmissionFactory(
+                phase=self.phase,
+                owner=self.participant,
+                status=Submission.FINISHED,
+                parent=parent,
+                data=shared_data,
+            )
+            for _ in range(2)
+        ]
+        storage_before = self.participant.get_used_storage_space()
+
+        self.client.login(username="participant", password="participant")
+        resp = self.client.delete(reverse("submission-soft-delete", args=[parent.pk]))
+
+        assert resp.status_code == 200
+        assert not Data.objects.filter(pk=shared_data.pk).exists()
+
+        parent.refresh_from_db()
+        assert parent.is_soft_deleted is True
+        assert parent.data_id is None
+        for child in children:
+            child.refresh_from_db()
+            assert child.is_soft_deleted is True
+            assert child.data_id is None
+
+        assert self.participant.get_used_storage_space() < storage_before
+
+    def test_submission_list_can_paginate_only_visible_parent_rows(self):
+        """Internal multi-task children must not inflate the UI pagination count."""
+        parent = SubmissionFactory(
+            phase=self.phase,
+            owner=self.participant,
+            status=Submission.FINISHED,
+            is_soft_deleted=False,
+            leaderboard=None,
+            has_children=True,
+        )
+        children = [
+            SubmissionFactory(
+                phase=self.phase,
+                owner=self.participant,
+                status=Submission.FINISHED,
+                parent=parent,
+            )
+            for _ in range(3)
+        ]
+
+        self.client.login(username="participant", password="participant")
+        resp = self.client.get(
+            reverse("submission-list"),
+            {
+                "phase": self.phase.pk,
+                "show_child_submissions": "false",
+                "page_size": "all",
+            },
+        )
+
+        assert resp.status_code == 200
+        expected_count = Submission.objects.filter(
+            phase=self.phase,
+            owner=self.participant,
+            is_soft_deleted=False,
+            parent__isnull=True,
+        ).count()
+        assert resp.data["count"] == expected_count
+        returned_ids = {row["id"] for row in resp.data["results"]}
+        assert all(child.pk not in returned_ids for child in children)
+
 
 class PhaseActiveSubmissionTests(APITestCase):
     """a submission must only be creatable while its phase is active

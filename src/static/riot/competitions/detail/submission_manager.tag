@@ -329,6 +329,10 @@
                 }
             }
 
+            // Child submissions are rendered inside their parent modal. Exclude
+            // them at the API/queryset level so pagination/count reflect rows.
+            filters.show_child_submissions = false
+
             filters.page = self.page
             if (String(self.page_size).toLowerCase() === 'all') {
                 filters.page_size = 'all'
