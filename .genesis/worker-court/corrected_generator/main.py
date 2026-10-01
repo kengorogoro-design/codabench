@@ -106,7 +106,7 @@ def learn(examples):
         before, after = ast.parse(example['before']), ast.parse(example['after'])
         left_units, right_units = named_units(before), named_units(after)
         before_imports, after_imports = imports(before), imports(after)
-        for key in left_units.keys() & right_units.keys():
+        for key in sorted(left_units.keys() & right_units.keys()):
             for left, right in changed_frontiers(left_units[key], right_units[key]):
                 if not isinstance(left, (ast.expr, ast.stmt)) or node_size(left) < 3:
                     continue
