@@ -24,14 +24,13 @@ jobs:
         run: docker compose up -d db rabbit redis minio createbuckets django
       - name: Observe the unmodified upstream defect
         run: |
-          git show 49dcad1a1c5e2603fbcd706efc287bfa99fd4c7d:src/apps/api/serializers/leaderboards.py > src/apps/api/serializers/leaderboards.py
-          git show 49dcad1a1c5e2603fbcd706efc287bfa99fd4c7d:src/apps/leaderboards/strategies.py > src/apps/leaderboards/strategies.py
+          python3 .genesis/source-induction/materialize.py baseline
           if docker compose exec -T -e CELERY_TASK_ALWAYS_EAGER=True django py.test -q --junitxml=src/producer-baseline.xml src/apps/api/tests/test_leaderboards.py::LeaderboardNullScoreOrderingTests::test_missing_primary_score_is_ranked_after_scored_submission src/apps/api/tests/test_leaderboards.py::LeaderboardNullScoreOrderingTests::test_force_best_ignores_submission_missing_primary_score; then
             echo "Baseline unexpectedly passed"
             exit 1
           fi
           python3 .genesis/source-induction/verify_baseline.py
-          git restore --source=HEAD -- src/apps/api/serializers/leaderboards.py src/apps/leaderboards/strategies.py
+          python3 .genesis/source-induction/materialize.py delivery
           python3 .genesis/source-induction/replay.py
       - name: Test generated repair in both directions and serializers
         run: docker compose exec -T -e CELERY_TASK_ALWAYS_EAGER=True django py.test -q src/apps/api/tests/test_leaderboards.py::LeaderboardNullScoreOrderingTests
