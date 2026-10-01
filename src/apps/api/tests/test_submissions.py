@@ -722,6 +722,7 @@ class SubmissionSoftDeletionTest(APITestCase):
                 status=Submission.FINISHED,
                 parent=parent,
                 data=shared_data,
+                leaderboard=None,
             )
             for _ in range(2)
         ]
