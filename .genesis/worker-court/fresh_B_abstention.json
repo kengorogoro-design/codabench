@@ -1,0 +1,24 @@
+{
+  "producer_id": "6905d5765d8858953f547cffeca0a89f5742df25bac90cd0a775218a7d0150dd",
+  "request_digest": "f365724db15646d723900117dfb1b021a163a7f97561a177856a74589322a422",
+  "output_digest": "2de620e5ed16c414d56d16f35fcf70bb4ae6064deff9c52bced87b387929da78",
+  "delivery_digest": null,
+  "output": {
+    "evidence": [],
+    "rule_ids": [
+      "7cc2d1948df664052c1e0684c426263c5344cca1a71455e27c339c91cb455f69",
+      "8095523b6ee963aeec3e409234fa12c939ff84ab5d371ae2bd3abb7177b6809b",
+      "913c94e44c591951ae3fb66098067e3e3cb46883af77f56d8e037d8a4d3dcc53",
+      "9a61d76b34d879db3f9fdb3be535133a4ec050205c5100499af84b13830dc932",
+      "a565cfc45ff573d43e0e5b1549690aa1ed37d37058d82ca8c38d41099bc6a81b",
+      "a7d91fa6b16203ede7184b59b89d286a10abf32ee3e68c98bd765a69b349c116",
+      "cd8d8cf9ad63514b54601cb149d24299e058432dc07b36c1b7fcd314887288ab",
+      "d4fdecaeac257eafc63e9d731f28c85f6284ceb75b24345843455ba0dde7f775",
+      "dbe4f53e148b3403745f4d3bee2bfb58dd4b92e70a341e633f53a9479c255419"
+    ],
+    "scope": "BOUNDED_SOURCE_PAIR_LEARNING_NOT_MIGI",
+    "failure": "NO_APPLICABLE_UNAMBIGUOUS_LEARNED_RULE"
+  },
+  "origin": "EXECUTED_OPAQUE_PRODUCER",
+  "migi_credit": 0
+}

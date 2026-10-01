@@ -1,0 +1,9 @@
+{
+  "generator_id": "0780405d27834cf195ed8c042436ae415bc0c3bcabf9dd21c6e19b8aef00c954",
+  "producer_id": "264e0c972d836be0d6a30951e3ecee80ea0b5a250c913a5b4edf8417d899d43d",
+  "delivery_digest": "dc2bad473f52e7cc75df7a1aac279ee1957a5e4f2b0dcb486d1a336c50a3be15",
+  "fresh_task_credit": 0,
+  "scope": "SOURCE_PAIR_REPLAY_ON_EXPOSED_TASK",
+  "builder_generator_corrections": true,
+  "manual_edits_to_delivery": false
+}

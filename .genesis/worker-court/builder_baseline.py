@@ -1,6 +1,7 @@
 import asyncio
 import glob
 import hashlib
+import math
 import json
 import os
 import functools
@@ -34,7 +35,6 @@ from celery import Celery, shared_task, utils, signals
 from billiard.exceptions import SoftTimeLimitExceeded
 
 from logs_loguru import configure_logging, colorize_run_args
-import math
 
 logger = logging.getLogger(__name__)
 
@@ -505,61 +505,87 @@ class Run:
     """
 
     def __init__(self, run_args):
-        self.run_related_name = f"uPK-{run_args['user_pk']}_sID-{run_args['id']}"
-        if run_args['is_scoring']:
-            task_type = 'scoring_program'
+        self.run_related_name = (
+            f"uPK-{run_args['user_pk']}_sID-{run_args['id']}"
+        )
+        if run_args["is_scoring"]:
+            task_type = "scoring_program"
         else:
-            task_type = 'ingestion'
+            task_type = "ingestion"
+
+        # Directories for the run
         self.watch = True
         self.completed_program_counter = 0
+        # Create the folder then save the path to root_dir
         self.submission_run_directory = Settings.BASE_DIR + f'{self.run_related_name}__'
-        os.mkdir(self.submission_run_directory + task_type, mode=448)
+        os.mkdir(self.submission_run_directory + task_type, mode=0o700)
         self.root_dir = self.submission_run_directory + task_type
-        self.bundle_dir = os.path.join(self.root_dir, 'bundles')
-        self.input_dir = os.path.join(self.root_dir, 'input')
-        self.output_dir = os.path.join(self.root_dir, 'output')
-        self.data_dir = os.path.join(Settings.HOST_DIRECTORY, 'data')
+
+        self.bundle_dir = os.path.join(self.root_dir, "bundles")
+        self.input_dir = os.path.join(self.root_dir, "input")
+        self.output_dir = os.path.join(self.root_dir, "output")
+        self.data_dir = os.path.join(Settings.HOST_DIRECTORY, "data")  # absolute path to data in the host
         self.logs = {}
-        self.is_scoring = run_args['is_scoring']
-        self.user_pk = run_args['user_pk']
-        self.submission_id = run_args['id']
-        self.submissions_api_url = run_args['submissions_api_url']
-        self.container_image = run_args['docker_image']
-        self.secret = run_args['secret']
+
+        # Details for submission
+        self.is_scoring = run_args["is_scoring"]
+        self.user_pk = run_args["user_pk"]
+        self.submission_id = run_args["id"]
+        self.submissions_api_url = run_args["submissions_api_url"]
+        self.container_image = run_args["docker_image"]
+        self.secret = run_args["secret"]
         if Settings.COMPUTE_WORKER_DISABLE_PREDICTION_UPLOAD:
-            self.prediction_result = 'Prediction Upload Disabled.'
+            self.prediction_result = "Prediction Upload Disabled."
         else:
-            self.prediction_result = run_args['prediction_result']
-        self.scoring_result = run_args.get('scoring_result')
-        self.execution_time_limit = run_args['execution_time_limit']
+            self.prediction_result = run_args["prediction_result"]
+        self.scoring_result = run_args.get("scoring_result")
+        self.execution_time_limit = run_args["execution_time_limit"]
         self._execution_deadline = None
         self._execution_time_limit_exceeded = threading.Event()
-        self.human_in_the_loop = run_args.get('human_in_the_loop', False)
-        self.stdout, self.stderr, self.ingestion_stdout, self.ingestion_stderr = self._get_stdout_stderr_file_names(run_args)
-        self.ingestion_program_container_name = f'ingestion_{self.run_related_name}'
-        self.scoring_program_container_name = f'scoring_{self.run_related_name}'
-        self.ingestion_program_data = run_args.get('ingestion_program_data')
-        self.scoring_program_data = run_args.get('scoring_program_data')
-        self.submission_data = run_args.get('submission_data')
-        self.input_data = run_args.get('input_data')
-        self.reference_data = run_args.get('reference_data')
-        self.ingestion_only_during_scoring = run_args.get('ingestion_only_during_scoring')
-        self.detailed_results_url = run_args.get('detailed_results_url')
+        # ----- HITL ------
+        self.human_in_the_loop = run_args.get("human_in_the_loop", False)
+        # stdout and stderr
+        self.stdout, self.stderr, self.ingestion_stdout, self.ingestion_stderr = (
+            self._get_stdout_stderr_file_names(run_args)
+        )
+        # Setting up container names for ingestion, scoring and submission
+        self.ingestion_program_container_name = f"ingestion_{self.run_related_name}"
+        self.scoring_program_container_name = f"scoring_{self.run_related_name}"
+
+        # Setting up ingestion, scoring and submission data
+        self.ingestion_program_data = run_args.get("ingestion_program_data")
+        self.scoring_program_data = run_args.get("scoring_program_data")
+        self.submission_data = run_args.get("submission_data")
+
+        self.input_data = run_args.get("input_data")
+        self.reference_data = run_args.get("reference_data")
+        self.ingestion_only_during_scoring = run_args.get("ingestion_only_during_scoring")
+        self.detailed_results_url = run_args.get("detailed_results_url")
         self.pending_detailed_results = None
         self.hitl_http_server = None
         self.hitl_http_thread = None
+
         self.ingestion_program_exit_code = None
         self.ingestion_program_elapsed_time = None
         self.scoring_program_exit_code = None
         self.scoring_program_elapsed_time = None
+
+        # Socket connection to stream output of submission
         submission_api_url_parsed = urlparse(self.submissions_api_url)
         websocket_host = submission_api_url_parsed.netloc
-        websocket_scheme = 'ws' if submission_api_url_parsed.scheme == 'http' else 'wss'
-        self.websocket_url = f'{websocket_scheme}://{websocket_host}/submission_input/{self.user_pk}/{self.submission_id}/{self.secret}/'
+        websocket_scheme = "ws" if submission_api_url_parsed.scheme == "http" else "wss"
+        self.websocket_url = f"{websocket_scheme}://{websocket_host}/submission_input/{self.user_pk}/{self.submission_id}/{self.secret}/"
+
+        # Nice requests adapter with generous retries/etc.
         self.requests_session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1))
-        self.requests_session.mount('http://', adapter)
-        self.requests_session.mount('https://', adapter)
+        adapter = requests.adapters.HTTPAdapter(
+            max_retries=Retry(
+                total=3,
+                backoff_factor=1,
+            )
+        )
+        self.requests_session.mount("http://", adapter)
+        self.requests_session.mount("https://", adapter)
 
     async def watch_detailed_results(self):
         """Watches files alongside scoring + program containers, currently only used
@@ -1014,8 +1040,8 @@ class Run:
     async def _run_container_engine_cmd(self, container, kind):
         """Stream logs without blocking the event loop; enforce the run deadline."""
         container_id = container['Id']
-        stdout_chunks, stderr_chunks = ([], [])
-        websocket, stream = (None, None)
+        stdout_chunks, stderr_chunks = [], []
+        websocket, stream = None, None
         return_code = {'StatusCode': 1}
         start = time.time()
         completed = threading.Event()
@@ -1024,25 +1050,29 @@ class Run:
         deadline = self._execution_deadline
         if deadline is None:
             deadline = time.monotonic() + self.execution_time_limit
-    
+
         def expire_container():
             with lifecycle_lock:
                 if completed.is_set():
                     return
                 timeout_flag.set()
             try:
+                # Capture the immutable ID, never a name that a later run can reuse.
                 client.remove_container(container_id, v=True, force=True)
             except docker.errors.NotFound:
                 pass
             except Exception as error:
                 logger.error(f'Deadline cleanup for {container_id} failed: {error}')
+
         watchdog = threading.Timer(max(0, deadline - time.monotonic()), expire_container)
         watchdog.daemon = True
         watchdog.start()
         exhausted = object()
-    
+
         def next_log():
+            # StopIteration must not cross the Future boundary of to_thread.
             return next(stream, exhausted)
+
         try:
             if not Settings.COMPUTE_WORKER_DISABLE_LOG_UPLOAD:
                 try:
@@ -1054,6 +1084,7 @@ class Run:
                 raise ExecutionTimeLimitExceeded()
             await asyncio.to_thread(client.start, container=container_id)
             stream = await asyncio.to_thread(client.attach, container_id, demux=True, stream=True, logs=True)
+            # Drain an exited container too: its buffered final logs remain useful.
             while True:
                 log = await asyncio.to_thread(next_log)
                 if log is exhausted:
@@ -1092,6 +1123,7 @@ class Run:
                     await asyncio.to_thread(stream.close)
                 except Exception as error:
                     logger.debug(f'Cannot close log stream for {container_id}: {error}')
+            # Join after container removal so a blocked attach/wait can unwind.
             await asyncio.to_thread(watchdog.join)
             if websocket is not None:
                 try:
@@ -1099,7 +1131,13 @@ class Run:
                     await asyncio.wait_for(websocket.wait_closed(), timeout=5.0)
                 except Exception as error:
                     logger.error(error)
-            self.logs[kind] = {'returncode': return_code['StatusCode'], 'start': start, 'end': time.time(), 'stdout': {'data': b''.join(stdout_chunks), 'stream': b''.join(stdout_chunks), 'continue': True, 'location': self.stdout if kind == ProgramKind.SCORING_PROGRAM else self.ingestion_stdout}, 'stderr': {'data': b''.join(stderr_chunks), 'stream': b''.join(stderr_chunks), 'continue': True, 'location': self.stderr if kind == ProgramKind.SCORING_PROGRAM else self.ingestion_stderr}}
+            self.logs[kind] = {
+                'returncode': return_code['StatusCode'], 'start': start, 'end': time.time(),
+                'stdout': {'data': b''.join(stdout_chunks), 'stream': b''.join(stdout_chunks),
+                           'continue': True, 'location': self.stdout if kind == ProgramKind.SCORING_PROGRAM else self.ingestion_stdout},
+                'stderr': {'data': b''.join(stderr_chunks), 'stream': b''.join(stderr_chunks),
+                           'continue': True, 'location': self.stderr if kind == ProgramKind.SCORING_PROGRAM else self.ingestion_stderr},
+            }
             self.completed_program_counter += 1
 
     def _get_host_path(self, *paths):
@@ -1395,52 +1433,101 @@ class Run:
             )
 
     def start(self):
-        if isinstance(self.execution_time_limit, bool) or not isinstance(self.execution_time_limit, (int, float)) or (not math.isfinite(self.execution_time_limit)) or (self.execution_time_limit <= 0):
-            raise SubmissionException('Execution time limit must be a finite positive number')
-        logger.info(f'Preparing to run: {(ProgramKind.SCORING_PROGRAM if self.is_scoring else ProgramKind.INGESTION_PROGRAM)}')
-        ingestion_program_dir = os.path.join(self.root_dir, 'ingestion_program')
-        scoring_program_dir = os.path.join(self.root_dir, 'scoring_program')
+
+        if (isinstance(self.execution_time_limit, bool)
+                or not isinstance(self.execution_time_limit, (int, float))
+                or not math.isfinite(self.execution_time_limit)
+                or self.execution_time_limit <= 0):
+            raise SubmissionException("Execution time limit must be a finite positive number")
+
+        logger.info(f"Preparing to run: {ProgramKind.SCORING_PROGRAM if self.is_scoring else ProgramKind.INGESTION_PROGRAM}")
+
+        # Define directories for ingestion, scoring and submission
+        ingestion_program_dir = os.path.join(self.root_dir, "ingestion_program")
+        scoring_program_dir = os.path.join(self.root_dir, "scoring_program")
+
         loop = asyncio.new_event_loop()
+        # Set the event loop for the gather
         asyncio.set_event_loop(loop)
+
         tasks = []
         if self.is_scoring:
-            tasks.append(self._run_program_directory(kind=ProgramKind.SCORING_PROGRAM, program_dir=scoring_program_dir))
+            # During scoring, run scoring program directory
+            tasks.append(
+                self._run_program_directory(kind=ProgramKind.SCORING_PROGRAM, program_dir=scoring_program_dir)
+            )
+
+            # If ingestion_only_during_scoring is true, we also run ingestion program directory in parallel to scoring program
             if self.ingestion_only_during_scoring:
-                tasks.append(self._run_program_directory(kind=ProgramKind.INGESTION_PROGRAM, program_dir=ingestion_program_dir))
+                tasks.append(
+                    self._run_program_directory(kind=ProgramKind.INGESTION_PROGRAM, program_dir=ingestion_program_dir)
+                )
+
+            # During scoring we watch for detailed results
             if not self.human_in_the_loop:
-                tasks.append(self.watch_detailed_results())
+                tasks.append(
+                    self.watch_detailed_results()
+                )
         else:
-            tasks.extend([self._run_program_directory(kind=ProgramKind.INGESTION_PROGRAM, program_dir=ingestion_program_dir)])
+            # During ingestion we run ingestion program directory and submission directory
+            tasks.extend([
+                self._run_program_directory(kind=ProgramKind.INGESTION_PROGRAM, program_dir=ingestion_program_dir),
+            ])
+
         logger.info(tasks)
         gathered_tasks = asyncio.gather(*tasks, return_exceptions=True)
-        task_results = []
+
+        task_results = []  # will store results/exceptions from gather
         self._execution_time_limit_exceeded = threading.Event()
         self._execution_deadline = time.monotonic() + self.execution_time_limit
+
         try:
-            task_results = loop.run_until_complete(asyncio.wait_for(gathered_tasks, timeout=self.execution_time_limit)) or []
+            # run tasks
+            # keep what gather returned so we can detect async errors later
+            task_results = loop.run_until_complete(
+                asyncio.wait_for(gathered_tasks, timeout=self.execution_time_limit)
+            ) or []
             if self._execution_time_limit_exceeded.is_set():
                 raise ExecutionTimeLimitExceeded()
+
         except (ExecutionTimeLimitExceeded, asyncio.TimeoutError):
-            error_message = f'Execution Time Limit exceeded. Limit was {self.execution_time_limit} seconds'
+            error_message = f"Execution Time Limit exceeded. Limit was {self.execution_time_limit} seconds"
             logger.error(error_message)
-            execution_time_limit_exceeded_data = {'type': 'Execution_Time_Limit_Exceeded', 'error_message': error_message, 'is_scoring': self.is_scoring}
-            containers_to_kill = [self.ingestion_program_container_name, self.scoring_program_container_name]
-            logger.debug('Trying to kill and remove container ' + str(containers_to_kill))
+            # Prepare data to be sent to submissions api
+            execution_time_limit_exceeded_data = {
+                "type": "Execution_Time_Limit_Exceeded",
+                "error_message": error_message,
+                "is_scoring": self.is_scoring,
+            }
+
+            # Cleanup containers
+            containers_to_kill = [
+                self.ingestion_program_container_name, 
+                self.scoring_program_container_name
+            ]
+            logger.debug("Trying to kill and remove container " + str(containers_to_kill))
+
             for container in containers_to_kill:
                 try:
                     client.remove_container(str(container), v=True, force=True)
                 except docker.errors.APIError as e:
                     logger.error(e)
                 except Exception as e:
-                    logger.error(f'There was a problem killing {containers_to_kill}: {e}')
+                    logger.error(f"There was a problem killing {containers_to_kill}: {e}")
                     if Settings.LOG_LEVEL == Settings.LOG_LEVEL_DEBUG:
                         logger.exception(e)
+
+            # Send data to be written to ingestion/scoring std_err
             self._update_submission(execution_time_limit_exceeded_data)
+            # Send error through web socket to the frontend
             asyncio.run(self._send_data_through_socket(error_message))
             raise SubmissionException(error_message)
+
         finally:
             self._execution_deadline = None
             self.watch = False
+
+            # Cancel any remaining pending tasks before closing the loop
             pending = [t for t in asyncio.all_tasks(loop) if not t.done()]
             for task in pending:
                 task.cancel()
@@ -1449,16 +1536,24 @@ class Run:
                     loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
                 except Exception:
                     pass
+
+            # Close loop
             asyncio.set_event_loop(None)
             loop.close()
+
             for kind, logs in self.logs.items():
-                if logs['end'] is not None:
-                    elapsed_time = logs['end'] - logs['start']
+                if logs["end"] is not None:
+                    elapsed_time = logs["end"] - logs["start"]
                 else:
                     elapsed_time = self.execution_time_limit
-                return_code = logs['returncode'] if logs['returncode'] is None or isinstance(logs['returncode'], int) else 1
+                # Normalize the return_code
+                return_code = (
+                    logs["returncode"]
+                    if logs["returncode"] is None or isinstance(logs["returncode"], int)
+                    else 1
+                )
                 if return_code is None:
-                    logger.warning('No return code from Process. Killing it')
+                    logger.warning("No return code from Process. Killing it")
                     if kind == ProgramKind.INGESTION_PROGRAM:
                         containers_to_kill = self.ingestion_program_container_name
                     else:
@@ -1469,7 +1564,9 @@ class Run:
                     except docker.errors.APIError as e:
                         logger.error(e)
                     except Exception as e:
-                        logger.error(f'There was a problem killing {containers_to_kill}: {e}')
+                        logger.error(
+                            f"There was a problem killing {containers_to_kill}: {e}"
+                        )
                         if Settings.LOG_LEVEL == Settings.LOG_LEVEL_DEBUG:
                             logger.exception(e)
                 if kind == ProgramKind.SCORING_PROGRAM:
@@ -1481,30 +1578,46 @@ class Run:
                 logger.info(f"[exited with {logs['returncode']}]")
                 if Settings.COMPUTE_WORKER_DISABLE_LOG_UPLOAD == False:
                     for key, value in logs.items():
-                        if key not in ['stdout', 'stderr']:
+                        if key not in ["stdout", "stderr"]:
                             continue
-                        if value['data']:
+                        if value["data"]:
                             logger.info(f"[{key}]\n{value['data']}")
-                            self._put_file(value['location'], raw_data=value['data'])
-                logger.info('Program finished')
+                            self._put_file(value["location"], raw_data=value["data"])
+
+
+                # set logs of this kind to None, since we handled them already
+                logger.info("Program finished")
+
         if self.is_scoring:
+            # Check if scoring program failed
+            # We have can have 2 or 3 gathered tasks: 3 gathered tasks in case when `ingestion_only_during_scoring` is True, 2 otherwise
             if self.ingestion_only_during_scoring:
                 if self.human_in_the_loop:
                     program_results, _ = task_results
                 else:
                     program_results, _, _ = task_results
-            elif self.human_in_the_loop:
-                program_results, = task_results
             else:
-                program_results, _ = task_results
-            had_async_exc = isinstance(program_results, BaseException) and (not isinstance(program_results, asyncio.CancelledError))
-            program_rc = getattr(self, 'scoring_program_exit_code', None)
-            failed_rc = program_rc is None or program_rc != 0
+                if self.human_in_the_loop:
+                    (program_results,) = task_results
+                else:
+                    program_results, _ = task_results
+            # Gather returns either normal values or exception instances when return_exceptions=True
+            had_async_exc = isinstance(
+                program_results, BaseException
+            ) and not isinstance(program_results, asyncio.CancelledError)
+            program_rc = getattr(self, "scoring_program_exit_code", None)
+            failed_rc = (program_rc is None) or (program_rc != 0)
             if had_async_exc or failed_rc:
-                self._update_status(SubmissionStatus.FAILED, extra_information=f'program_rc={program_rc}, async={task_results}')
-                raise SubmissionException('Child task failed or non-zero return code')
+                self._update_status(
+                    SubmissionStatus.FAILED,
+                    extra_information=f"program_rc={program_rc}, async={task_results}",
+                )
+                # Raise so upstream marks failed immediately
+                raise SubmissionException("Child task failed or non-zero return code")
+
             if not self.human_in_the_loop:
                 self._update_status(SubmissionStatus.FINISHED)
+
         else:
             self._update_status(SubmissionStatus.SCORING)
 
