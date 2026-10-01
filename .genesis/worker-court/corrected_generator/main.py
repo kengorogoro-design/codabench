@@ -120,7 +120,7 @@ def learn(examples):
                 replacement = encode(right, shared_names, shared_literals)
                 if pattern == replacement:
                     continue
-                dependencies = {n: after_imports[n] for n in new_names - old_names if n in after_imports}
+                dependencies = {n: after_imports[n] for n in sorted(new_names - old_names) if n in after_imports}
                 rule = {'pattern': pattern, 'replacement': replacement,
                         'dependencies': dependencies,
                         'example_id': example['example_id'],
@@ -269,7 +269,7 @@ def main():
         source = Path(__file__).read_text()
         prefix = source[:source.index('\nRULES = ')]
         entry = source[source.index('\ndef main():'):]
-        program = prefix + '\nRULES = ' + repr(rules) + '\n' + entry
+        program = prefix + '\nRULES = json.loads(' + repr(canonical(rules)) + ')\n' + entry
         out = {'bundles': [{'files': {'main.py': program,
                 'bundle.json': '{"entrypoint":"main.py","kind":"generator"}'}}],
                'learned_rules': rules, 'training_digest': digest(examples), 'migi_credit': 0}

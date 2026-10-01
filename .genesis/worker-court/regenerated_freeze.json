@@ -1,9 +1,12 @@
 {
-  "generator_id": "0780405d27834cf195ed8c042436ae415bc0c3bcabf9dd21c6e19b8aef00c954",
-  "producer_id": "264e0c972d836be0d6a30951e3ecee80ea0b5a250c913a5b4edf8417d899d43d",
+  "generator_id": "0d949c285aea6635f48d51a79cdb79631f26a318a2b635d94026454a0ada2098",
+  "producer_id": "8dda27c8d27e5417d54bb4c7d4a92a662f33f6aa16aa270aafd6d6bce14702d8",
   "delivery_digest": "dc2bad473f52e7cc75df7a1aac279ee1957a5e4f2b0dcb486d1a336c50a3be15",
+  "output_digest": "5cdec753d77c13656406c6e539f3744824352dce7abdf85353db5032a57fedba",
   "fresh_task_credit": 0,
   "scope": "SOURCE_PAIR_REPLAY_ON_EXPOSED_TASK",
   "builder_generator_corrections": true,
-  "manual_edits_to_delivery": false
+  "manual_edits_to_delivery": false,
+  "selfhost_retry_identity": true,
+  "prior_delivery_regression": true
 }
