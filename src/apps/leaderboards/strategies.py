@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 from rest_framework.generics import get_object_or_404
 
 from competitions.models import Submission
@@ -82,7 +82,11 @@ class BestModeStrategy(BaseModeStrategy):
     def _choose_best_submission(self, leaderboard, owner, phase):
         """choose best submission"""
         primary_col = leaderboard.columns.get(index=leaderboard.primary_index)
-        ordering = [f'{"-" if primary_col.sorting == "desc" else ""}primary_col']
+        ordering = [
+            F('primary_col').desc(nulls_last=True)
+            if primary_col.sorting == 'desc'
+            else F('primary_col').asc(nulls_last=True)
+        ]
 
         submissions = Submission.objects.filter(phase=phase,
                                                 owner=owner,
@@ -93,7 +97,11 @@ class BestModeStrategy(BaseModeStrategy):
 
         for column in leaderboard.columns.exclude(id=primary_col.id).order_by('index'):
             col_name = f'col{column.index}'
-            ordering.append(f'{"-" if column.sorting == "desc" else ""}{col_name}')
+            ordering.append(
+                F(col_name).desc(nulls_last=True)
+                if column.sorting == 'desc'
+                else F(col_name).asc(nulls_last=True)
+            )
             kwargs = {
                 col_name: Sum('scores__score', filter=Q(scores__column__index=column.index))
             }
